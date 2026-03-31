@@ -1,0 +1,16 @@
+pip install -r requirements.txt
+```
+
+---
+
+But if you want a **basic one** based on your project (Flask + ML), here it is:
+```
+flask
+scikit-learn
+pandas
+numpy
+pickle5
+```
+
+---
+

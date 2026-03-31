@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Car Price Predictor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #222222;
+      --border: #2e2e2e;
+      --accent: #e8ff47;
+      --accent-dark: #b8cc1e;
+      --text: #f0f0f0;
+      --muted: #888;
+      --radius: 12px;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2.5rem 1rem;
+    }
+    .container { width: 100%; max-width: 620px; animation: fadeUp 0.5s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #0f0f0f;
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 99px;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+    h1 span { color: var(--accent); }
+    .subtitle { font-size: 14px; color: var(--muted); font-weight: 300; margin-bottom: 1.75rem; }
+
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      margin-bottom: 12px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 2px; }
+    label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    input, select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      width: 100%;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    input::placeholder { color: #555; }
+    select option { background: #1a1a1a; }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #0f0f0f;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 0.25rem;
+    }
+    .btn:hover { background: var(--accent-dark); }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { background: #444; color: #888; cursor: not-allowed; }
+
+    .result {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+      animation: fadeUp 0.3s ease both;
+    }
+    .result-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+    .result-price { font-family: 'Syne', sans-serif; font-size: 42px; font-weight: 700; color: var(--accent); letter-spacing: -1px; }
+    .result-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+    .error {
+      display: none;
+      background: #2a1010;
+      border: 1px solid #5a2020;
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #f87171;
+      margin-top: 0.75rem;
+    }
+    .spinner {
+      display: none;
+      text-align: center;
+      padding: 1rem;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .spinner::before {
+      content: '';
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 500px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      h1 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="badge">ML College Project</div>
+  <h1>Car Price <span>Predictor</span></h1>
+  <p class="subtitle">Fill in all car details to get an estimated market price</p>
+
+  <!-- Basic Info -->
+  <div class="card">
+    <div class="section-title">Basic Info</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Car Brand (Make)</label>
+        <select id="make">
+          <option value="">Select brand</option>
+          <option>Maruti</option>
+          <option>Hyundai</option>
+          <option>Honda</option>
+          <option>Toyota</option>
+          <option>Tata</option>
+          <option>Ford</option>
+          <option>Renault</option>
+          <option>Mahindra</option>
+          <option>Volkswagen</option>
+          <option>Skoda</option>
+          <option>BMW</option>
+          <option>Audi</option>
+          <option>Mercedes-Benz</option>
+          <option>Kia</option>
+          <option>MG</option>
+          <option>Nissan</option>
+          <option>Jeep</option>
+          <option>Volvo</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Car Age (years)</label>
+        <input type="number" id="car_age" placeholder="e.g. 5" min="0" max="30" />
+      </div>
+      <div class="field">
+        <label>Fuel Type</label>
+        <select id="fuel_type">
+          <option value="">Select fuel</option>
+          <option>Petrol</option>
+          <option>Diesel</option>
+          <option>CNG</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Transmission</label>
+        <select id="transmission">
+          <option value="">Select type</option>
+          <option>Manual</option>
+          <option>Automatic</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Drivetrain</label>
+        <select id="drivetrain">
+          <option value="">Select drivetrain</option>
+          <option>FWD</option>
+          <option>RWD</option>
+          <option>AWD</option>
+          <option>4WD</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Kilometers Driven</label>
+        <input type="number" id="kilometer" placeholder="e.g. 45000" min="0" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Engine & Performance -->
+  <div class="card">
+    <div class="section-title">Engine & Performance</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Engine (cc)</label>
+        <input type="number" id="engine" placeholder="e.g. 1197" min="0" />
+      </div>
+      <div class="field">
+        <label>Fuel Tank (litres)</label>
+        <input type="number" id="fuel_tank_capacity" placeholder="e.g. 37" min="0" />
+      </div>
+      <div class="field">
+        <label>Max Power (bhp)</label>
+        <input type="number" id="max_power_bhp" placeholder="e.g. 82" step="0.1" />
+      </div>
+      <div class="field">
+        <label>Max Power (rpm)</label>
+        <input type="number" id="max_power_rpm" placeholder="e.g. 6000" />
+      </div>
+      <div class="field">
+        <label>Max Torque (Nm)</label>
+        <input type="number" id="max_torque_nm" placeholder="e.g. 113" step="0.1" />
+      </div>
+      <div class="field">
+        <label>Max Torque (rpm)</label>
+        <input type="number" id="max_torque_rpm" placeholder="e.g. 4200" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Dimensions -->
+  <div class="card">
+    <div class="section-title">Dimensions (mm)</div>
+    <div class="grid-3">
+      <div class="field">
+        <label>Length</label>
+        <input type="number" id="length" placeholder="e.g. 3845" />
+      </div>
+      <div class="field">
+        <label>Width</label>
+        <input type="number" id="width" placeholder="e.g. 1735" />
+      </div>
+      <div class="field">
+        <label>Height</label>
+        <input type="number" id="height" placeholder="e.g. 1530" />
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" onclick="predictPrice()" id="predict-btn">Predict Price →</button>
+
+  <div class="spinner" id="spinner">Predicting price...</div>
+
+  <div class="result" id="result-box">
+    <div class="result-label">Estimated Selling Price</div>
+    <div class="result-price" id="result-price">₹0</div>
+    <div class="result-note">Prediction by your Linear Regression model</div>
+  </div>
+
+  <div class="error" id="error-box"></div>
+
+</div>
+
+<script>
+  async function predictPrice() {
+    const fields = ['make','fuel_type','drivetrain','transmission','kilometer',
+                    'engine','length','width','height','fuel_tank_capacity',
+                    'max_power_bhp','max_power_rpm','max_torque_nm','max_torque_rpm','car_age'];
+
+    const errorBox  = document.getElementById('error-box');
+    const resultBox = document.getElementById('result-box');
+    const spinner   = document.getElementById('spinner');
+    const btn       = document.getElementById('predict-btn');
+
+    errorBox.style.display  = 'none';
+    resultBox.style.display = 'none';
+
+    for (let f of fields) {
+      if (!document.getElementById(f).value) {
+        errorBox.textContent = 'Please fill in all fields before predicting.';
+        errorBox.style.display = 'block';
+        return;
+      }
+    }
+
+    spinner.style.display = 'block';
+    btn.disabled = true;
+
+    const payload = {
+      make:               document.getElementById('make').value,
+      fuel_type:          document.getElementById('fuel_type').value,
+      drivetrain:         document.getElementById('drivetrain').value,
+      transmission:       document.getElementById('transmission').value,
+      kilometer:          document.getElementById('kilometer').value,
+      engine:             document.getElementById('engine').value,
+      length:             document.getElementById('length').value,
+      width:              document.getElementById('width').value,
+      height:             document.getElementById('height').value,
+      fuel_tank_capacity: document.getElementById('fuel_tank_capacity').value,
+      max_power_bhp:      document.getElementById('max_power_bhp').value,
+      max_power_rpm:      document.getElementById('max_power_rpm').value,
+      max_torque_nm:      document.getElementById('max_torque_nm').value,
+      max_torque_rpm:     document.getElementById('max_torque_rpm').value,
+      car_age:            document.getElementById('car_age').value,
+    };
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error('Server error: ' + response.status);
+
+      const data = await response.json();
+      const price = Number(data.predicted_price);
+
+      document.getElementById('result-price').textContent =
+        '₹' + price.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+      spinner.style.display   = 'none';
+      resultBox.style.display = 'block';
+
+    } catch (err) {
+      spinner.style.display = 'none';
+      errorBox.textContent  = 'Cannot connect to Flask server. Make sure app.py is running on port 5000.';
+      errorBox.style.display = 'block';
+    }
+
+    btn.disabled = false;
+  }
+</script>
+</body>
+</html>
